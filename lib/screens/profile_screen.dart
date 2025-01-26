@@ -137,31 +137,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 height: 16,
               ),
 
-              SwitchListTile(
-                title: const Text(
-                  'Notifications',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 24,
-                    fontFamily: 'Jua',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                secondary: const Icon(Icons.notifications_active, color: Colors.black,),
-                value: _notificationsEnabled,
-                onChanged: (bool value) {
-                  setState(() {
-                    _notificationsEnabled = value;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(_notificationsEnabled
-                            ? 'Notifications enabled'
-                            : 'Notifications disabled'),
-                      ),
-                    );
-                  });
-                },
-              ),
+              // SwitchListTile(
+              //   title: const Text(
+              //     'Notifications',
+              //     style: TextStyle(
+              //       color: Colors.black,
+              //       fontSize: 24,
+              //       fontFamily: 'Jua',
+              //       fontWeight: FontWeight.w400,
+              //     ),
+              //   ),
+              //   secondary: const Icon(Icons.notifications_active, color: Colors.black,),
+              //   value: _notificationsEnabled,
+              //   onChanged: (bool value) {
+              //     setState(() {
+              //       _notificationsEnabled = value;
+              //       ScaffoldMessenger.of(context).showSnackBar(
+              //         SnackBar(
+              //           content: Text(_notificationsEnabled
+              //               ? 'Notifications enabled'
+              //               : 'Notifications disabled'),
+              //         ),
+              //       );
+              //     });
+              //   },
+              // ),
               SizedBox(height: 16,),
 
               // Sign out button
