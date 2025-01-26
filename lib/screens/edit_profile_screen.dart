@@ -1,19 +1,13 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:path/path.dart' as p;
 import 'package:task_manager_io/screens/profile_screen.dart';
 import '../providers/user_provider.dart';
-import '../models/user.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
-  _EditProfileScreenState createState() => _EditProfileScreenState();
+  State createState() => _EditProfileScreenState();
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
@@ -22,8 +16,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _emailController = TextEditingController();
   final _aboutController = TextEditingController();
   String avatarPath = "";
-
-
 
   @override
   void initState() {
@@ -50,474 +42,119 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      body: Center(
-        child: Container(
-          width: 700,
-          height: 840,
-          clipBehavior: Clip.antiAlias,
-          decoration: ShapeDecoration(
-            color: Color(0xFFE1FF9B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+      appBar: AppBar(
+        title: const Text('Edit your profile'),
+        actions: [
+          IconButton(
+              onPressed: () => _finishEditing.call(), icon: Icon(Icons.save))
+        ],
+      ),
+      backgroundColor: Color(0xFFE1FF9B),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Title: "Editing your profile"
+
+            // User avatar circle
+            Container(
+              width: 100,
+              height: 100,
+              clipBehavior: Clip.antiAlias,
+              decoration: ShapeDecoration(
+                color: Color(0xFFEADDFF),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+              // Show user's saved avatar if it exists, otherwise show the default asset.
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: Image.asset(
+                  avatarPath,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-          ),
-          child: Stack(
-            children: [
-              // Title: "Editing your profile"
-              Positioned(
-                left: 148,
-                top: 50,
-                child: SizedBox(
-                  width: 403,
-                  height: 73,
-                  child: Text(
-                    'Editing your profile',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 50,
-                      fontFamily: 'Jua',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
+
+            // "Change avatar" button
+            // Positioned(
+            //   left: 220,
+            //   top: 185,
+            //   child: InkWell(
+            //     onTap: _changeAvatar,
+            //     child: Container(
+            //       width: 170,
+            //       height: 50,
+            //       decoration: ShapeDecoration(
+            //         color: Color(0xFF00FFFF),
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(15),
+            //         ),
+            //       ),
+            //       child: Center(
+            //         child: Text(
+            //           'Change avatar',
+            //           style: TextStyle(
+            //             color: Colors.black,
+            //             fontSize: 20,
+            //             fontFamily: 'Jua',
+            //             fontWeight: FontWeight.w400,
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+
+            SizedBox(
+              height: 16,
+            ),
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Name',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
               ),
+            ),
 
-              // Left decorative image
-              Positioned(
-                left: 12,
-                top: -34,
-                child: Container(
-                  width: 179,
-                  height: 228,
-                  decoration: BoxDecoration(
-                    // Replace with your own asset or network image
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/img1.jpg'),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+            SizedBox(
+              height: 16,
+            ),
+
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
               ),
+            ),
 
-              // Right decorative image
-              Positioned(
-                left: 509,
-                top: -37,
-                child: Container(
-                  width: 184,
-                  height: 210,
-                  decoration: BoxDecoration(
-                    // Replace with your own asset or network image
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/img2.jpg'),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+            SizedBox(
+              height: 16,
+            ),
+
+            TextField(
+              controller: _aboutController,
+              decoration: InputDecoration(
+                labelText: 'About',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
               ),
-
-              // User avatar circle
-              Positioned(
-                left: 80,
-                top: 174,
-                child: Container(
-                  width: 107,
-                  height: 97,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: ShapeDecoration(
-                    color: Color(0xFFEADDFF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                  ),
-                  // Show user's saved avatar if it exists, otherwise show the default asset.
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image.asset(
-                      avatarPath,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-
-              // "Change avatar" button
-              // Positioned(
-              //   left: 220,
-              //   top: 185,
-              //   child: InkWell(
-              //     onTap: _changeAvatar,
-              //     child: Container(
-              //       width: 170,
-              //       height: 50,
-              //       decoration: ShapeDecoration(
-              //         color: Color(0xFF00FFFF),
-              //         shape: RoundedRectangleBorder(
-              //           borderRadius: BorderRadius.circular(15),
-              //         ),
-              //       ),
-              //       child: Center(
-              //         child: Text(
-              //           'Change avatar',
-              //           style: TextStyle(
-              //             color: Colors.black,
-              //             fontSize: 20,
-              //             fontFamily: 'Jua',
-              //             fontWeight: FontWeight.w400,
-              //           ),
-              //         ),
-              //       ),
-              //     ),
-              //   ),
-              // ),
-
-              // Name label (the green rectangle with "Name")
-              Positioned(
-                left: 33,
-                top: 285,
-                child: Container(
-                  width: 212,
-                  height: 70,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 25,
-                        top: 0,
-                        child: Container(
-                          width: 162,
-                          height: 70,
-                          decoration: ShapeDecoration(
-                            color: Color(0xFF00FF2E),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        top: 11.88,
-                        child: SizedBox(
-                          width: 212,
-                          height: 32.12,
-                          child: Text(
-                            'Name',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 36,
-                              fontFamily: 'Jua',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Name TextField
-              Positioned(
-                left: 235,
-                top: 290,
-                child: Container(
-                  width: 260,
-                  height: 57,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _nameController,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontFamily: 'Jua',
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.only(left: 10, top: 10),
-                      suffixIcon: IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () => _nameController.clear(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Email label (the green rectangle with "Email")
-              Positioned(
-                left: 58,
-                top: 372,
-                child: Container(
-                  width: 162,
-                  height: 56,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        child: Container(
-                          width: 162,
-                          height: 56,
-                          decoration: ShapeDecoration(
-                            color: Color(0xFF00FF2E),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        top: 6.4,
-                        child: SizedBox(
-                          width: 162,
-                          height: 17.3,
-                          child: Text(
-                            'Email',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 36,
-                              fontFamily: 'Jua',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Email TextField
-              Positioned(
-                left: 236,
-                top: 372,
-                child: Container(
-                  width: 459,
-                  height: 56,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _emailController,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: 'Jua',
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.only(left: 12, top: 14),
-                      suffixIcon: IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () => _emailController.clear(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // About label (the green rectangle with "About")
-              Positioned(
-                left: 18,
-                top: 459,
-                child: Container(
-                  width: 245,
-                  height: 70,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 35.71,
-                        top: 0,
-                        child: Container(
-                          width: 171.60,
-                          height: 70,
-                          decoration: ShapeDecoration(
-                            color: Color(0xFF00FF2E),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        top: 12,
-                        child: SizedBox(
-                          width: 245,
-                          height: 32.12,
-                          child: Text(
-                            'About',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 36,
-                              fontFamily: 'Jua',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // About TextField (multiline)
-              Positioned(
-                left: 236,
-                top: 459,
-                child: Container(
-                  width: 458,
-                  height: 239.61,
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _aboutController,
-                    maxLines: null,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: 'Jua',
-                    ),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(10),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Finish edit button
-              Positioned(
-                left: 18,
-                top: 737,
-                child: InkWell(
-                  onTap: _finishEditing,
-                  child: Container(
-                    width: 245,
-                    height: 70,
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 28.89,
-                          top: 0,
-                          child: Container(
-                            width: 187.22,
-                            height: 70,
-                            decoration: ShapeDecoration(
-                              color: Color(0xFF00FFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          top: 11.88,
-                          child: SizedBox(
-                            width: 245,
-                            height: 32.12,
-                            child: Text(
-                              'Finish edit',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 24,
-                                fontFamily: 'Jua',
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Cancel button
-              Positioned(
-                left: 438,
-                top: 737,
-                child: InkWell(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 245,
-                    height: 70,
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 28.89,
-                          top: 0,
-                          child: Container(
-                            width: 187.22,
-                            height: 70,
-                            decoration: ShapeDecoration(
-                              color: Color(0xFF00FFFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          top: 11.88,
-                          child: SizedBox(
-                            width: 245,
-                            height: 32.12,
-                            child: Text(
-                              'Cancel',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 24,
-                                fontFamily: 'Jua',
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Right side large illustration
-              Positioned(
-                left: 403,
-                top: 125,
-                child: Container(
-                  width: 277,
-                  height: 264,
-                  decoration: BoxDecoration(
-                    // Replace with your own image
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/profile_screen_illustration.jpg'),
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -583,8 +220,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
     }
 
+    Navigator.pop(context);
+
     // Go back, or navigate to another screen
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => ProfileScreen()),
     );

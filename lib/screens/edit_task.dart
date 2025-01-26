@@ -7,10 +7,10 @@ import '../providers/user_provider.dart';
 class EditTask extends StatefulWidget {
   final Task task;
 
-  const EditTask({Key? key, required this.task}) : super(key: key);
+  const EditTask({super.key, required this.task});
 
   @override
-  _EditTaskState createState() => _EditTaskState();
+  State createState() => _EditTaskState();
 }
 
 class _EditTaskState extends State<EditTask> {
@@ -23,8 +23,10 @@ class _EditTaskState extends State<EditTask> {
   void initState() {
     super.initState();
     _taskNameController = TextEditingController(text: widget.task.name);
-    _taskDescriptionController = TextEditingController(text: widget.task.description);
-    _priorityController = TextEditingController(text: widget.task.priority.toString());
+    _taskDescriptionController =
+        TextEditingController(text: widget.task.description);
+    _priorityController =
+        TextEditingController(text: widget.task.priority.toString());
     _selectedDeadline = widget.task.deadline;
   }
 
@@ -68,9 +70,11 @@ class _EditTaskState extends State<EditTask> {
       SnackBar(content: Text('Task updated successfully')),
     );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(),
+      ),
+          (Route<dynamic> route) => false,
     );
   }
 
@@ -92,30 +96,19 @@ class _EditTaskState extends State<EditTask> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Task')),
-      body: Center(
-        child: Container(
-          width: 700,
-          height: 840,
-          padding: EdgeInsets.all(20),
-          decoration: ShapeDecoration(
-            color: Color(0xFFE1FF9B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
+      appBar: AppBar(
+        title: Text('Edit Task'),
+        actions: [IconButton(onPressed: () => _updateTask.call(), icon: Icon(Icons.save))],
+      ),
+      backgroundColor: Color(0xFFE1FF9B),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
+            mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Editing task',
-                style: TextStyle(
-                  fontSize: 50,
-                  fontFamily: 'Jua',
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              SizedBox(height: 30),
+              SizedBox(height: 16,),
               TextField(
                 controller: _taskNameController,
                 decoration: InputDecoration(
@@ -153,7 +146,7 @@ class _EditTaskState extends State<EditTask> {
                     ),
                   ),
                   SizedBox(width: 20),
-                  Container(
+                  SizedBox(
                     width: 80,
                     child: TextField(
                       controller: _priorityController,
@@ -175,7 +168,7 @@ class _EditTaskState extends State<EditTask> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF00FF2E),
                       padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
@@ -183,31 +176,18 @@ class _EditTaskState extends State<EditTask> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
+                    icon: Icon(Icons.calendar_today, size: 40),
+                    iconAlignment: IconAlignment.start,
                     onPressed: _pickDeadline,
-                    child: Text(
+                    label: Text(
                       _selectedDeadline == null
                           ? 'Set a deadline'
                           : '${_selectedDeadline!.day}/${_selectedDeadline!.month}/${_selectedDeadline!.year}',
                       style: TextStyle(fontSize: 20),
                     ),
                   ),
-                  Icon(Icons.calendar_today, size: 40),
+        
                 ],
-              ),
-              SizedBox(height: 40),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF00FFFF),
-                  padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-                onPressed: _updateTask,
-                child: Text(
-                  'Finish editing',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
               ),
             ],
           ),

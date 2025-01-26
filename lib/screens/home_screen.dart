@@ -10,10 +10,10 @@ import '../providers/user_provider.dart';
 import '../models/user.dart';  // for Task model
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -23,6 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Simple pagination: how many tasks to show per “page”
   int _tasksPerPage = 5;
   int _currentPage = 0;
+
+  final _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -51,256 +53,252 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
 
     return Scaffold(
-      body: Center(
-        child: Container(
-          width: 1000, // a bit wider to accommodate two columns
-          height: 840,
-          decoration: ShapeDecoration(
-            color: Color(0xFFE1FF9B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Left Column: Welcome, tasks list, scroll, counters
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Avatar + Welcome
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: Color(0xFFE1FF9B),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 16.0, left: 16, right: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Could use a CircleAvatar or an Image
+                  InkWell(
+                    onTap: () {
+                      // Navigate to ProfileScreen.
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ProfileScreen()),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.purple.shade200,
+                      backgroundImage: avatarPath != null && avatarPath.isNotEmpty
+                          ? FileImage(File(avatarPath))
+                          : AssetImage('assets/images/avatar_default.jpg') as ImageProvider,
+                      // If you don't want an overlay icon when the user has a custom avatar,
+                      // only show the icon when there's no avatarPath:
+                      child: (avatarPath == null || avatarPath.isEmpty)
+                          ? Icon(Icons.person, size: 40, color: Colors.white)
+                          : null,
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Text(
+                    'Welcome,\n${currentUser?.name ?? "User"}!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontFamily: 'Jua',
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Left Column: Welcome, tasks list, scroll, counters
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Could use a CircleAvatar or an Image
-                          InkWell(
-                            onTap: () {
-                              // Navigate to ProfileScreen.
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => ProfileScreen()),
-                              );
-                            },
-                            child: CircleAvatar(
-                              radius: 40,
-                              backgroundColor: Colors.purple.shade200,
-                              backgroundImage: avatarPath != null && avatarPath.isNotEmpty
-                                  ? FileImage(File(avatarPath))
-                                  : AssetImage('assets/images/avatar_default.jpg') as ImageProvider,
-                              // If you don't want an overlay icon when the user has a custom avatar,
-                              // only show the icon when there's no avatarPath:
-                              child: (avatarPath == null || avatarPath.isEmpty)
-                                  ? Icon(Icons.person, size: 40, color: Colors.white)
-                                  : null,
+                          // Avatar + Welcome
+                          // Sort by priority (with arrow up/down)
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                            ),
+                            onPressed: _toggleSortOrder,
+                            icon: Icon(
+                              _isDescending ? Icons.arrow_downward : Icons.arrow_upward,
+                              color: Colors.black,
+                            ),
+                            label: Text(
+                              'Sort by priority',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontFamily: 'Jua',
+                              ),
                             ),
                           ),
-                          SizedBox(width: 20),
+                          SizedBox(height: 20),
+
+                          // List of tasks (paged)
+                          Expanded(
+                            child: ListView(
+                              children: pageTasks.map((task) {
+                                return _buildPriorityTaskTile(task);
+                              }).toList(),
+                            ),
+                          ),
+
+                          // “Scroll through tasks” button
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF0AD800),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                // if we can go to next page
+                                if (endIndex < sortedTasks.length) {
+                                  _currentPage++;
+                                } else {
+                                  // reset or do nothing
+                                  _currentPage = 0;
+                                }
+                              });
+                            },
+                            icon: Icon(Icons.arrow_circle_right),
+                            label: Text(
+                              'Scroll tasks',
+                              style: TextStyle(
+                                fontFamily: 'Jua',
+                                color: Colors.black,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // Finished / Unfinished tasks counters
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF00FF37),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Finished tasks\n${allTasks.where((t) => t.done).length}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontFamily: 'Jua',
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Color(0xFF00EEFF),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Tasks to finish\n${allTasks.where((t) => !t.done).length}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontFamily: 'Jua',
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(width: 18),
+
+                    // Right Column: "Looks like you’ve got quite a lot to do!",
+                    // "Assign task" button, tasks with upcoming deadlines
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          SizedBox(height: 30),
+                          // A decorative image or placeholder on the top right
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                            child: Image.asset(
+                              'assets/images/img2.jpg',
+                              width: double.infinity,
+                              fit: BoxFit.fitWidth,
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF0AD800),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                            ),
+                            onPressed: () {
+                              // Go to AddTask screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => AddTask()),
+                              );
+                            },
+                            child: Text(
+                              'Add task',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontFamily: 'Jua',
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16),
                           Text(
-                            'Welcome,\n${currentUser?.name ?? "User"}!',
+                            'Tasks with upcoming deadlines...',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 40,
+                              fontSize: 16,
                               fontFamily: 'Jua',
                               fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+
+                          // List of upcoming tasks with < 2 days left
+                          Expanded(
+                            child: Scrollbar(
+                              thumbVisibility: true,
+                             // trackVisibility: true,
+                              child: SingleChildScrollView(
+                                controller: _scrollController,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: Column(
+                                    children: upcomingTasks.map((task) {
+                                      final timeDiff = task.deadline!.difference(DateTime.now());
+                                      return _buildUpcomingDeadlineTile(task, timeDiff);
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
-                      // Sort by priority (with arrow up/down)
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                        ),
-                        onPressed: _toggleSortOrder,
-                        icon: Icon(
-                          _isDescending ? Icons.arrow_downward : Icons.arrow_upward,
-                          color: Colors.black,
-                        ),
-                        label: Text(
-                          'Sort by priority',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontFamily: 'Jua',
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // List of tasks (paged)
-                      Expanded(
-                        child: ListView(
-                          children: pageTasks.map((task) {
-                            return _buildPriorityTaskTile(task);
-                          }).toList(),
-                        ),
-                      ),
-
-                      // “Scroll through tasks” button
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF00FF2E),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            // if we can go to next page
-                            if (endIndex < sortedTasks.length) {
-                              _currentPage++;
-                            } else {
-                              // reset or do nothing
-                              _currentPage = 0;
-                            }
-                          });
-                        },
-                        icon: Icon(Icons.arrow_circle_right),
-                        label: Text(
-                          'Scroll through tasks',
-                          style: TextStyle(
-                            fontFamily: 'Jua',
-                            color: Colors.black,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // Finished / Unfinished tasks counters
-                      Container(
-                        width: 316,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF00FF37),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Amount of finished tasks\n${allTasks.where((t) => t.done).length}',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontFamily: 'Jua',
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Container(
-                        width: 316,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Color(0xFF00EEFF),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Amount of tasks to finish\n${allTasks.where((t) => !t.done).length}',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontFamily: 'Jua',
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-
-                SizedBox(width: 20),
-
-                // Right Column: "Looks like you’ve got quite a lot to do!",
-                // "Assign task" button, tasks with upcoming deadlines
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(height: 30),
-                      // A decorative image or placeholder on the top right
-                      Image.asset(
-                        'assets/images/img2.jpg',
-                        width: 150,
-                        height: 120,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Looks like you’ve got quite a lot to do!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontFamily: 'Jua',
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF0AD800),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                        ),
-                        onPressed: () {
-                          // Go to AddTask screen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AddTask()),
-                          );
-                        },
-                        child: Text(
-                          'Assign task',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontFamily: 'Jua',
-                            fontWeight: FontWeight.w400,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 30),
-                      Text(
-                        'Tasks with upcoming deadlines...',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontFamily: 'Jua',
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // List of upcoming tasks with < 2 days left
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: upcomingTasks.map((task) {
-                              final timeDiff = task.deadline!.difference(DateTime.now());
-                              return _buildUpcomingDeadlineTile(task, timeDiff);
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -372,49 +370,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Builds a tile for an upcoming deadline task: pink box with name, short desc, time left
   Widget _buildUpcomingDeadlineTile(Task task, Duration diff) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(12),
-      width: 300,
-      decoration: BoxDecoration(
-        color: Color(0xFFFFC0CB), // or a pinkish color
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Task name
-          Text(
-            task.name,
-            style: TextStyle(
-              fontSize: 18,
-              fontFamily: 'Jua',
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Expanded(
+          child: Container(
+            margin: EdgeInsets.symmetric(vertical: 4),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Color(0xFFFFC0CB), // or a pinkish color
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Task name
+                Text(
+                  task.name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'Jua',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 6),
+                // Short description
+                Text(
+                  task.description ?? '',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                    fontFamily: 'Jua',
+                  ),
+                ),
+                SizedBox(height: 6),
+                // Time left
+                Text(
+                  _formatDeadline(diff),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black,
+                    fontFamily: 'Jua',
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 6),
-          // Short description
-          Text(
-            task.description ?? '',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-              fontFamily: 'Jua',
-            ),
-          ),
-          SizedBox(height: 6),
-          // Time left
-          Text(
-            _formatDeadline(diff),
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black,
-              fontFamily: 'Jua',
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
